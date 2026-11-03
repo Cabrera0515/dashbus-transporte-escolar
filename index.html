@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashbus - Transporte Escolar Inteligente</title>
+
+<!-- Leaflet -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<!-- Leaflet Routing Machine -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, sans-serif;
+}
+
+body {
+    background: #081225;
+    color: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 10px;
+}
+
+.phone-frame {
+    width: 100%;
+    max-width: 420px;
+    height: 850px;
+    background: #0b132b;
+    border-radius: 35px;
+    overflow: hidden;
+    border: 8px solid #1e293b;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 25px 50px rgba(0,0,0,.7);
+}
+
+.status-bar {
+    background: #081225;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.app-header {
+    background: #081225;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #1e293b;
+    z-index: 30;
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    background: #f59e0b;
+    color: #081225;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+}
+
+.logo-text h1 {
+    font-size: 18px;
+}
+
+.logo-text p {
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.role-switch {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #38bdf8;
+    padding: 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.app-body {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.tab-content {
+    display: none;
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    padding: 16px;
+    background: #0b132b;
+}
+
+.tab-content.active-tab {
+    display: block;
+}
+
+#tab-inicio {
+    padding: 0;
+    overflow: hidden;
+}
+
+#map-container {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+.leaflet-routing-container {
+    display: none !important;
+}
+
+.floating-card {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    z-index: 10;
+    background: rgba(15,23,42,.94);
+    backdrop-filter: blur(12px);
+    padding: 15px;
+    border-radius: 20px;
+    border: 1px solid #334155;
+    box-shadow: 0 10px 25px rgba(0,0,0,.4);
+}
+
+.welcome-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.welcome-icon {
+    background: #2563eb;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+}
+
+.welcome-text h3 {
+    font-size: 14px;
+}
+
+.welcome-text p {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.metric-box {
+    background: #1e293b;
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.metric-box span {
+    display: block;
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+.metric-box strong {
+    display: block;
+    font-size: 15px;
+    margin-top: 5px;
+}
+
+.progress-container {
+    margin-top: 12px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+}
+
+.progress-bar {
+    height: 7px;
+    background: #334155;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #22c55e;
+    transition: width .5s;
+}
+
+.driver-panel {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    right: 15px;
+    z-index: 10;
+    background: rgba(15,23,42,.96);
+    padding: 15px;
+    border-radius: 20px;
+    border: 1px solid #334155;
+    display: none;
+    max-height: 55%;
+    overflow-y: auto;
+}
+
+.btn-action {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    margin-top: 8px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.btn-start {
+    background: #16a34a;
+    color: white;
+}
+
+.btn-stop {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-config-toggle {
+    background: #334155;
+    color: white;
+}
+
+.config-drawer {
+    display: none;
+    background: #1e293b;
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 8px;
+}
+
+textarea, input, select {
+    width: 100%;
+    padding: 9px;
+    background: #0f172a;
+    color: white;
+    border: 1px solid #475569;
+    border-radius: 7px;
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+textarea {
+    min-height: 65px;
+}
+
+.aviso-card {
+    background: #1e293b;
+    border-left: 4px solid #f59e0b;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.aviso-card h4 {
+    font-size: 14px;
+    color: #f59e0b;
+}
+
+.aviso-card p {
+    font-size: 12px;
+    color: #cbd5e1;
+    margin-top: 5px;
+    white-space: pre-wrap;
+}
+
+.aviso-card span {
+    font-size: 10px;
+    color: #94a3b8;
+    display: block;
+    margin-top: 7px;
+}
+
+.nav-bar {
+    height: 65px;
+    background: #081225;
+    border-top: 1px solid #1e293b;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 30;
+}
+
+.nav-item {
+    text-align: center;
+    color: #64748b;
+    font-size: 10px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.nav-item span {
+    display: block;
+    font-size: 19px;
+}
+
+.nav-item.active {
+    color: #38bdf8;
+}
+
+.status-label {
+    font-size: 11px;
+    background: #16a34a;
+    padding: 4px 8px;
+    border-radius: 10px;
+}
+
+#map-status {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-top: 7px;
+}
+
+@media(max-height: 700px) {
+    .phone-frame { height: 95vh; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="phone-frame">
+
+    <div class="status-bar">
+        <span>9:41</span>
+        <span>📶 🔋 100%</span>
+    </div>
+
+    <header class="app-header">
+        <div class="logo-area">
+            <div class="logo-icon">🚌</div>
+            <div class="logo-text">
+                <h1 id="app-title">Dashbus</h1>
+                <p id="app-subtitle">Transporte Escolar Inteligente</p>
+            </div>
+        </div>
+
+        <button class="role-switch" onclick="cambiarRol()">
+            👤 Cambiar Vista
+        </button>
+    </header>
+
+    <div class="app-body">
+
+        <!-- INICIO Y MAPA -->
+
+        <div id="tab-inicio" class="tab-content active-tab">
+
+            <div id="map-container">
+                <div id="map"></div>
+            </div>
+
+            <!-- ALUMNO -->
+
+            <div id="student-view" class="floating-card">
+
+                <div class="welcome-box">
+                    <div class="welcome-icon">🎓</div>
+                    <div class="welcome-text">
+                        <h3>Hola, Ricardo 👋</h3>
+                        <p>Ubicación de tu autobús escolar.</p>
+                    </div>
+                </div>
+
+                <div class="metric-grid">
+
+                    <div class="metric-box">
+                        <span>Estado del autobús</span>
+                        <strong id="eta-time">Esperando...</strong>
+                    </div>
+
+                    <div class="metric-box">
+                        <span>Destino</span>
+                        <strong style="font-size:13px">
+                            Colonia Juárez
+                        </strong>
+                    </div>
+
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>Progreso del recorrido</span>
+                        <strong id="progress-text">0%</strong>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                </div>
+
+                <div id="map-status">
+                    Calculando recorrido...
+                </div>
+
+            </div>
+
+            <!-- CONDUCTOR -->
+
+            <div id="driver-panel" class="driver-panel">
+
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <strong style="font-size:14px">
+                        🚌 Autobús 01
+                    </strong>
+
+                    <span class="status-label" id="driver-status">
+                        GPS Listo
+                    </span>
+                </div>
+
+                <p style="font-size:11px;color:#94a3b8;margin-top:8px">
+                    La Mariposa → Benito Juárez → Centro →
+                    Colonia Juárez
+                </p>
+
+                <button id="start-button"
+                    class="btn-action btn-start"
+                    onclick="iniciarSimulacionRuta()"
+                    disabled>
+                    ▶ Cargando ruta...
+                </button>
+
+                <button id="stop-button"
+                    class="btn-action btn-stop"
+                    onclick="detenerRecorrido()"
+                    style="display:none">
+                    ■ Detener recorrido
+                </button>
+
+                <button class="btn-action btn-config-toggle"
+                    onclick="toggleConfig()">
+                    ⚙️ Configuración Firebase
+                </button>
+
+                <div id="config-drawer" class="config-drawer">
+
+                    <p style="font-size:11px;color:#cbd5e1">
+                        Configuración de Firebase
+                    </p>
+
+                    <textarea id="firebase-json"
+                        placeholder="Pega aquí tu configuración Firebase JSON"></textarea>
+
+                    <input id="cfg-bus"
+                        type="text"
+                        value="Bus01"
+                        placeholder="Nombre del autobús">
+
+                    <button class="btn-action"
+                        style="background:#2563eb;color:white"
+                        onclick="guardarConfig()">
+                        Conectar Firebase
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- AVISOS -->
+
+        <div id="tab-avisos" class="tab-content">
+
+            <h2 style="font-size:17px;color:#38bdf8;margin-bottom:15px">
+                📢 Avisos y Alertas
+            </h2>
+
+            <div id="driver-aviso-box"
+                style="display:none;background:#1e293b;padding:12px;border-radius:12px;margin-bottom:14px">
+
+                <h3 style="font-size:13px">
+                    Publicar nuevo aviso
+                </h3>
+
+                <input id="input-titulo-aviso"
+                    placeholder="Título del aviso">
+
+                <textarea id="input-texto-aviso"
+                    placeholder="Mensaje para los alumnos"></textarea>
+
+                <button class="btn-action"
+                    style="background:#2563eb;color:white"
+                    onclick="publicarAviso()">
+                    Enviar aviso
+                </button>
+
+            </div>
+
+            <div id="lista-avisos">
+
+                <div class="aviso-card">
+                    <h4>Ruta Dashbus</h4>
+                    <p>Recorrido desde La Mariposa hacia Colonia Juárez.</p>
+                    <span>Información inicial</span>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- AJUSTES -->
+
+        <div id="tab-ajustes" class="tab-content">
+
+            <h2 style="font-size:17px;color:#38bdf8;margin-bottom:15px">
+                ⚙️ Ajustes
+            </h2>
+
+            <div style="background:#1e293b;padding:14px;border-radius:12px;font-size:13px">
+
+                <p style="margin-bottom:10px">
+                    <strong>Usuario:</strong> Jose Ricardo Rosales
+                </p>
+
+                <p style="margin-bottom:10px">
+                    <strong>ID:</strong> bortex777
+                </p>
+
+                <p style="margin-bottom:10px">
+                    <strong>Rol:</strong>
+                    <span id="lbl-rol-actual">Alumno</span>
+                </p>
+
+                <p style="margin-bottom:10px">
+                    <strong>Origen:</strong> La Mariposa
+                </p>
+
+                <p style="margin-bottom:10px">
+                    <strong>Destino:</strong> Colonia Juárez
+                </p>
+
+                <p style="color:#94a3b8;font-size:11px">
+                    Dashbus v1.3
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <nav class="nav-bar">
+
+        <div class="nav-item active"
+            onclick="cambiarTab(this,'tab-inicio')">
+            <span>🏠</span>Inicio
+        </div>
+
+        <div class="nav-item"
+            onclick="cambiarTab(this,'tab-inicio')">
+            <span>🗺️</span>Mapa
+        </div>
+
+        <div class="nav-item"
+            onclick="cambiarTab(this,'tab-avisos')">
+            <span>🔔</span>Avisos
+        </div>
+
+        <div class="nav-item"
+            onclick="cambiarTab(this,'tab-ajustes')">
+            <span>⚙️</span>Ajustes
+        </div>
+
+    </nav>
+
+</div>
+
+<!-- LIBRERÍAS -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+<script>
+
+// ======================================
+// CONFIGURACIÓN GENERAL
+// ======================================
+
+let esRolConductor = false;
+let dbRef = null;
+let marker = null;
+let intervalo = null;
+let rutaCoordenadas = [];
+let rutaLista = false;
+let indiceRuta = 0;
+let routingControl = null;
+let ultimaPosicion = null;
+
+// ======================================
+// MAPA
+// ======================================
+
+const map = L.map('map', {
+    zoomControl: false
+}).setView([30.40, -107.92], 12);
+
+L.control.zoom({
+    position: 'topright'
+}).addTo(map);
+
+L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap'
+    }
+).addTo(map);
+
+// ======================================
+// PUNTOS DE REFERENCIA DE LA RUTA
+// ======================================
+
+// IMPORTANTE:
+// Son coordenadas aproximadas basadas en el
+// recorrido original proporcionado.
+// Verifica cada punto con Google Maps antes
+// de usar el recorrido con un autobús real.
+
+const puntosRuta = [
+
+    // Salida: La Mariposa / Dublán
+    [30.4578, -107.9150],
+
+    // Recorrido por Benito Juárez y zona urbana
+    [30.4350, -107.9125],
+    [30.4100, -107.9125],
+    [30.3850, -107.9125],
+    [30.3680, -107.9125],
+    [30.3620, -107.9050],
+    [30.3600, -107.8880],
+    [30.3550, -107.8960],
+
+    // Cruce por el pueblo
+    [30.3450, -107.9100],
+    [30.3320, -107.9250],
+    [30.3200, -107.9400],
+    [30.3080, -107.9550],
+    [30.2950, -107.9700],
+    [30.2830, -107.9800],
+
+    // Destino: referencia de Colonia Juárez
+    [30.2800, -107.9850]
+];
+
+// ======================================
+// CALCULAR RECORRIDO POR CARRETERAS
+// ======================================
+
+function calcularRuta() {
+
+    document.getElementById('map-status').innerText =
+        "Calculando ruta por las calles...";
+
+    routingControl = L.Routing.control({
+
+        waypoints: puntosRuta.map(p =>
+            L.latLng(p[0], p[1])
+        ),
+
+        router: L.Routing.osrmv1({
+            serviceUrl: 'https://router.project-osrm.org/route/v1',
+            profile: 'driving'
+        }),
+
+        show: false,
+        addWaypoints: false,
+        draggableWaypoints: false,
+        routeWhileDragging: false,
+        fitSelectedRoutes: true,
+
+        createMarker: function() {
+            return null;
+        },
+
+        lineOptions: {
+            styles: [{
+                color: '#4f46e5',
+                opacity: 0.95,
+                weight: 6
+            }]
+        }
+
+    }).addTo(map);
+
+    routingControl.on('routesfound', function(e) {
+
+        const route = e.routes[0];
+
+        rutaCoordenadas = route.coordinates.map(p => [
+            p.lat,
+            p.lng
+        ]);
+
+        rutaLista = true;
+
+        document.getElementById('map-status').innerText =
+            "Ruta calculada. Lista para iniciar.";
+
+        document.getElementById('start-button').disabled = false;
+
+        document.getElementById('start-button').innerText =
+            "▶ Iniciar recorrido a Colonia Juárez";
+
+        console.log("Puntos de ruta:", rutaCoordenadas.length);
+
+        map.fitBounds(
+            L.latLngBounds(rutaCoordenadas),
+            {padding:[30,30]}
+        );
+
+    });
+
+    routingControl.on('routingerror', function() {
+
+        rutaLista = false;
+
+        document.getElementById('map-status').innerText =
+            "Error al calcular. Revisa Internet y los puntos de ruta.";
+
+        document.getElementById('start-button').disabled = true;
+
+    });
+
+}
+
+calcularRuta();
+
+// ======================================
+// CAMBIAR ROL
+// ======================================
+
+function cambiarRol() {
+
+    esRolConductor = !esRolConductor;
+
+    const student = document.getElementById('student-view');
+    const driver = document.getElementById('driver-panel');
+    const aviso = document.getElementById('driver-aviso-box');
+
+    if (esRolConductor) {
+
+        student.style.display = 'none';
+        driver.style.display = 'block';
+        aviso.style.display = 'block';
+
+        document.getElementById('app-title').innerText =
+            'Panel Conductor';
+
+        document.getElementById('app-subtitle').innerText =
+            'La Mariposa → Colonia Juárez';
+
+        document.getElementById('lbl-rol-actual').innerText =
+            'Conductor - Autobús 01';
+
+    } else {
+
+        student.style.display = 'block';
+        driver.style.display = 'none';
+        aviso.style.display = 'none';
+
+        document.getElementById('app-title').innerText =
+            'Dashbus';
+
+        document.getElementById('app-subtitle').innerText =
+            'Transporte Escolar Inteligente';
+
+        document.getElementById('lbl-rol-actual').innerText =
+            'Alumno';
+
+    }
+
+}
+
+// ======================================
+// NAVEGACIÓN
+// ======================================
+
+function cambiarTab(el, tabId) {
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+
+    el.classList.add('active');
+
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active-tab');
+    });
+
+    document.getElementById(tabId).classList.add('active-tab');
+
+    if (tabId === 'tab-inicio') {
+        setTimeout(() => map.invalidateSize(), 200);
+    }
+
+}
+
+// ======================================
+// CONFIGURACIÓN FIREBASE
+// ======================================
+
+function toggleConfig() {
+
+    const drawer = document.getElementById('config-drawer');
+
+    drawer.style.display =
+        drawer.style.display === 'block' ? 'none' : 'block';
+
+}
+
+function guardarConfig() {
+
+    const rawJson = document.getElementById('firebase-json').value;
+    const busName = document.getElementById('cfg-bus').value.trim();
+
+    try {
+
+        const config = JSON.parse(rawJson);
+
+        if (!config.databaseURL || !config.apiKey || !config.projectId) {
+            throw new Error('Faltan datos de Firebase.');
+        }
+
+        if (!busName) {
+            throw new Error('Escribe el nombre del autobús.');
+        }
+
+        if (firebase.apps.length) {
+            firebase.app().delete();
+        }
+
+        const app = firebase.initializeApp(config);
+
+        const database = firebase.database(app);
+
+        dbRef = database.ref('buses/' + busName);
+
+        // Escuchar ubicación del autobús
+
+        dbRef.child('ubicacion').on('value', snapshot => {
+
+            const data = snapshot.val();
+
+            if (!data || typeof data.lat !== 'number' ||
+                typeof data.lng !== 'number') {
+                return;
+            }
+
+            const newPos = [data.lat, data.lng];
+
+            if (!marker) {
+
+                marker = L.marker(newPos).addTo(map);
+
+                marker.bindPopup('🚌 Autobús Dashbus');
+
+                marker.openPopup();
+
+                map.setView(newPos, 14);
+
+            } else {
+
+                animateMarker(marker, ultimaPosicion || newPos, newPos, 1500);
+
+            }
+
+            ultimaPosicion = newPos;
+
+            document.getElementById('eta-time').innerText =
+                data.estado === 'Finalizado'
+                ? 'Llegó al destino'
+                : 'En movimiento';
+
+            if (typeof data.progreso === 'number') {
+                actualizarProgreso(data.progreso);
+            }
+
+            if (data.estado === 'Finalizado') {
+                document.getElementById('eta-time').innerText =
+                    'Llegó al destino';
+            }
+
+        }, error => {
+            console.error(error);
+            alert('No se pudo leer la ubicación de Firebase.');
+        });
+
+        // Escuchar avisos
+
+        dbRef.child('avisos').on('value', snapshot => {
+
+            const lista = document.getElementById('lista-avisos');
+
+            lista.replaceChildren();
+
+            const data = snapshot.val();
+
+            if (!data) {
+                lista.innerText = 'No hay avisos disponibles.';
+                return;
+            }
+
+            Object.values(data).reverse().forEach(aviso => {
+
+                const card = document.createElement('div');
+                card.className = 'aviso-card';
+
+                const title = document.createElement('h4');
+                title.textContent = aviso.titulo || 'Aviso';
+
+                const message = document.createElement('p');
+                message.textContent = aviso.texto || '';
+
+                const time = document.createElement('span');
+                time.textContent = aviso.hora || '';
+
+                card.append(title, message, time);
+                lista.appendChild(card);
+
+            });
+
+        }, error => {
+            console.error(error);
+            alert('No se pudieron cargar los avisos.');
+        });
+
+        document.getElementById('driver-status').innerText =
+            'Firebase conectado';
+
+        alert('¡Dashbus conectado a Firebase!');
+
+        toggleConfig();
+
+    } catch(error) {
+
+        console.error(error);
+
+        alert('Error al configurar Firebase: ' + error.message);
+
+    }
+
+}
+
+// ======================================
+// PUBLICAR AVISOS
+// ======================================
+
+async function publicarAviso() {
+
+    if (!dbRef) {
+        alert('Primero conecta Firebase.');
+        return;
+    }
+
+    const titulo =
+        document.getElementById('input-titulo-aviso').value.trim();
+
+    const texto =
+        document.getElementById('input-texto-aviso').value.trim();
+
+    if (!titulo || !texto) {
+        alert('Escribe un título y un mensaje.');
+        return;
+    }
+
+    try {
+
+        await dbRef.child('avisos').push({
+
+            titulo: titulo,
+            texto: texto,
+
+            hora: new Date().toLocaleString('es-MX')
+
+        });
+
+        document.getElementById('input-titulo-aviso').value = '';
+        document.getElementById('input-texto-aviso').value = '';
+
+        alert('¡Aviso publicado correctamente!');
+
+    } catch(error) {
+
+        console.error(error);
+        alert('No se pudo publicar el aviso.');
+
+    }
+
+}
+
+// ======================================
+// INICIAR RECORRIDO
+// ======================================
+
+function iniciarSimulacionRuta() {
+
+    if (!dbRef) {
+        alert('Primero conecta Firebase.');
+        return;
+    }
+
+    if (!rutaLista || rutaCoordenadas.length === 0) {
+        alert('Espera a que se calcule la ruta.');
+        return;
+    }
+
+    if (intervalo) {
+        return;
+    }
+
+    indiceRuta = 0;
+
+    document.getElementById('start-button').style.display = 'none';
+    document.getElementById('stop-button').style.display = 'block';
+
+    document.getElementById('driver-status').innerText =
+        'Recorrido activo';
+
+    alert('¡Recorrido iniciado desde La Mariposa!');
+
+    // Reducir los puntos para una simulación manejable.
+    // La ruta dibujada conserva su geometría completa.
+
+    const cantidad = rutaCoordenadas.length;
+    const maxPuntos = 50;
+
+    const paso = Math.max(1, Math.ceil(cantidad / maxPuntos));
+
+    let recorrido = rutaCoordenadas.filter((p, i) =>
+        i % paso === 0 || i === cantidad - 1
+    );
+
+    indiceRuta = 0;
+
+    async function avanzar() {
+
+        if (!intervalo) return;
+
+        if (indiceRuta >= recorrido.length) {
+
+            clearInterval(intervalo);
+            intervalo = null;
+
+            document.getElementById('driver-status').innerText =
+                'Recorrido finalizado';
+
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('stop-button').style.display = 'none';
+
+            document.getElementById('start-button').innerText =
+                '▶ Iniciar nuevo recorrido';
+
+            document.getElementById('eta-time').innerText =
+                'Llegó al destino';
+
+            actualizarProgreso(100);
+
+            try {
+                await dbRef.child('ubicacion').update({
+                    progreso: 100,
+                    estado: 'Finalizado'
+                });
+            } catch(error) {
+                console.error(error);
+            }
+
+            alert('¡El autobús llegó a Colonia Juárez!');
+
+            return;
+        }
+
+        const punto = recorrido[indiceRuta];
+
+        const progreso = Math.round(
+            (indiceRuta / (recorrido.length - 1)) * 100
+        );
+
+        try {
+
+            await dbRef.child('ubicacion').set({
+
+                lat: punto[0],
+                lng: punto[1],
+
+                origen: 'La Mariposa',
+                destino: 'Colonia Juárez',
+
+                progreso: progreso,
+
+                estado: 'En movimiento',
+
+                actualizado: Date.now()
+
+            });
+
+            actualizarProgreso(progreso);
+
+            indiceRuta++;
+
+        } catch(error) {
+
+            console.error(error);
+
+            clearInterval(intervalo);
+            intervalo = null;
+
+            document.getElementById('driver-status').innerText =
+                'Error de conexión';
+
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('stop-button').style.display = 'none';
+
+            alert('Se perdió la conexión con Firebase.');
+
+        }
+
+    }
+
+    intervalo = setInterval(avanzar, 2000);
+
+    avanzar();
+
+}
+
+// ======================================
+// DETENER RECORRIDO
+// ======================================
+
+async function detenerRecorrido() {
+
+    if (intervalo) {
+        clearInterval(intervalo);
+        intervalo = null;
+    }
+
+    document.getElementById('driver-status').innerText =
+        'Recorrido detenido';
+
+    document.getElementById('start-button').style.display = 'block';
+    document.getElementById('stop-button').style.display = 'none';
+
+    document.getElementById('start-button').innerText =
+        '▶ Reanudar recorrido';
+
+    if (dbRef) {
+        try {
+            await dbRef.child('ubicacion').update({
+                estado: 'Detenido'
+            });
+        } catch(error) {
+            console.error(error);
+        }
+    }
+
+}
+
+// ======================================
+// BARRA DE PROGRESO
+// ======================================
+
+function actualizarProgreso(valor) {
+
+    const porcentaje = Math.max(0, Math.min(100, valor));
+
+    document.getElementById('progress-fill').style.width =
+        porcentaje + '%';
+
+    document.getElementById('progress-text').innerText =
+        porcentaje + '%';
+
+}
+
+// ======================================
+// ANIMACIÓN DEL AUTOBÚS
+// ======================================
+
+function animateMarker(marker, start, end, duration) {
+
+    const startTime = performance.now();
+
+    function frame(currentTime) {
+
+        const elapsed = currentTime - startTime;
+
+        const progress = Math.min(elapsed / duration, 1);
+
+        const lat =
+            start[0] + (end[0] - start[0]) * progress;
+
+        const lng =
+            start[1] + (end[1] - start[1]) * progress;
+
+        marker.setLatLng([lat, lng]);
+
+        if (progress < 1) {
+            requestAnimationFrame(frame);
+        }
+
+    }
+
+    requestAnimationFrame(frame);
+
+}
+
+// ======================================
+// INICIALIZAR TAMAÑO DEL MAPA
+// ======================================
+
+setTimeout(() => {
+    map.invalidateSize();
+}, 500);
+
+</script>
+
+</body>
+</html>
